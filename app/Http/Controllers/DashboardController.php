@@ -51,7 +51,7 @@ class DashboardController extends Controller
         $vendas = Venda::where('user_id', $userId)->get();
 
         foreach ($vendas as $venda) {
-            $produtos = json_decode($venda->produtos_ids, true);
+            $produtos = json_decode($venda->produtos, true);
 
             if (is_array($produtos)) {
                 foreach ($produtos as $produto) {

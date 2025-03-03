@@ -27,7 +27,7 @@ class VendasController extends Controller
             $venda->valor_taxa_formatado    = 'R$ ' . number_format($venda->valor_taxa, 2, ',', '.');
             $venda->total_formatado         = 'R$ ' . number_format($venda->total, 2, ',', '.');
             $venda->forma_pagamento_name    = $venda->formaPagamento ? $venda->formaPagamento->name : '';
-            $venda->produtos_ids = json_decode($venda->produtos_ids, true);
+            $venda->produtos = json_decode($venda->produtos, true);
             return $venda;
         });
 
@@ -119,7 +119,7 @@ class VendasController extends Controller
             $dadosVenda = [
                 'user_id' => Auth::id(),
                 'cliente_id' => $validated['cliente'],
-                'produtos_ids' => json_encode($validated['produtos']),
+                'produtos' => json_encode($validated['produtos']),
                 'forma_pagamento_id' => $paymentConfig->id,
                 'quantidade_parcelas' => $validated['parcelas'] ?? 1,
                 'valor_produto' => $valorProdutoDecimal,
@@ -198,7 +198,7 @@ class VendasController extends Controller
             DB::beginTransaction();
 
             // Restaurar os produtos ao estoque antes de atualizar a venda
-            $produtosAntigos = json_decode($venda->produtos_ids, true);
+            $produtosAntigos = json_decode($venda->produtos, true);
             if ($produtosAntigos) {
                 foreach ($produtosAntigos as $item) {
                     $produto = produtos::find($item['produto']);
@@ -230,7 +230,7 @@ class VendasController extends Controller
             // Atualizar os dados da venda
             $venda->update([
                 'cliente_id' => $validated['cliente'],
-                'produtos_ids' => json_encode($validated['produtos']),
+                'produtos' => json_encode($validated['produtos']),
                 'forma_pagamento_id' => PaymentConfig::where('slug', $validated['pagamento'])->firstOrFail()->id,
                 'quantidade_parcelas' => $validated['parcelas'] ?? 1,
                 'valor_produto' => $valorProdutoDecimal,
@@ -267,7 +267,7 @@ class VendasController extends Controller
         try {
             DB::beginTransaction();
 
-            $produtos = json_decode($venda->produtos_ids, true);
+            $produtos = json_decode($venda->produtos, true);
             if ($produtos) {
                 foreach ($produtos as $item) {
                     $produto = produtos::find($item['produto']);
@@ -291,7 +291,7 @@ class VendasController extends Controller
     }
     public function getVenda(Venda $venda)
     {
-        $produtosVinculados = json_decode($venda->produtos_ids, true);
+        $produtosVinculados = json_decode($venda->produtos, true);
         $produtoIds = array_column($produtosVinculados, 'produto');
         $produtos = Produtos::where('user_id', $venda->user_id)
             ->whereIn('id', $produtoIds)

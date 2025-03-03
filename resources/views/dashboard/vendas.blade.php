@@ -100,7 +100,7 @@
             </form>
         </div>
     </div>
-    <x-table title="Histórico de Vendas" :headers="['ID', 'Cliente', 'Pagamento', 'Parcelas', 'Valor', 'Ações']" enableSearch="true" enableExport="true" >
+    <x-table title="Histórico de Vendas" id="vendas" :headers="['ID', 'Cliente', 'Pagamento', 'Parcelas', 'Valor', 'Ações']" enableSearch="true" enableExport="true" >
         @foreach($vendas as $venda)
             <tr>
                 <td>{{ $venda->id }}</td>

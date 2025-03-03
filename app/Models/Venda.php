@@ -14,7 +14,7 @@ class Venda extends Model
     protected $fillable = [
         'user_id',
         'cliente_id',
-        'produtos_ids',
+        'produtos',
         'forma_pagamento_id',
         'quantidade_parcelas',
         'valor_produto',
@@ -26,7 +26,7 @@ class Venda extends Model
     ];
 
     protected $casts = [
-        'produtos_ids' => 'array',
+        'produtos' => 'array',
         'data_primeira_parcela' => 'date',
         'data_demais_parcelas' => 'date',
     ];

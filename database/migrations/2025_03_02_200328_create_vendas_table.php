@@ -12,7 +12,7 @@ class CreateVendasTable extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('cliente_id')->nullable();
-            $table->json('produtos_ids')->nullable();
+            $table->json('produtos')->nullable();
             $table->unsignedBigInteger('forma_pagamento_id')->nullable();
             $table->integer('quantidade_parcelas')->default(1);
             $table->decimal('valor_produto', 10, 2);
