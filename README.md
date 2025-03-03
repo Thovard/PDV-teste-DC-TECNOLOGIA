@@ -76,7 +76,7 @@ A aplicação estará disponível em:
 🔑 Credenciais de Teste
 ### Usuário administrativo pré-cadastrado:
 ```
-Email: admin@lintechdigital.com
+Email: admin@teste.com
 Senha: 123456
 ```
 
