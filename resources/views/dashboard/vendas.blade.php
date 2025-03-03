@@ -100,8 +100,8 @@
             </form>
         </div>
     </div>
-    <x-table title="Histórico de Vendas" id="vendas" :headers="['ID', 'Cliente', 'Pagamento', 'Parcelas', 'Valor', 'Ações']" enableSearch="true" enableExport="true" >
-        @foreach($vendas as $venda)
+    <x-table title="Histórico de Vendas" id="vendas" :headers="['ID', 'Cliente', 'Pagamento', 'Parcelas', 'Valor', 'Ações']" enableSearch="true" enableExport="true">
+        @foreach ($vendas as $venda)
             <tr>
                 <td>{{ $venda->id }}</td>
                 <td>{{ $venda->cliente ? $venda->cliente->nome : 'Venda sem cliente' }}</td>
@@ -110,30 +110,29 @@
                 <td>{{ $venda->total_formatado ?? number_format($venda->total, 2, ',', '.') }}</td>
                 <td>
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-warning dropdown-toggle" type="button" id="dropdownMenuButton{{ $venda->id }}"
-                            data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-sm btn-warning dropdown-toggle" type="button"
+                            id="dropdownMenuButton{{ $venda->id }}" data-bs-toggle="dropdown" aria-expanded="false">
                             Ações
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton{{ $venda->id }}">
                             <li>
-                                <x-hyperlink-button
-                                modalTarget="editModal{{ $venda->id }}"
-                                href="{{ url('/dashboard/vendas/get-venda/' . $venda->id) }}"
-                                class="dropdown-item edit-btn"
-                                id="edit"
-                                dataId="{{ $venda->id }}">
-                                Editar
-                            </x-hyperlink-button>
+                                <x-hyperlink-button modalTarget="editModal{{ $venda->id }}"
+                                    href="{{ url('/dashboard/vendas/get-venda/' . $venda->id) }}"
+                                    class="dropdown-item edit-btn" id="edit" dataId="{{ $venda->id }}">
+                                    Editar
+                                </x-hyperlink-button>
                             </li>
                             @if ($venda->parcelas->count() > 0)
                                 <li>
-                                    <x-hyperlink-button modalTarget="parcelasModal{{ $venda->id }}" class="dropdown-item">
+                                    <x-hyperlink-button modalTarget="parcelasModal{{ $venda->id }}"
+                                        class="dropdown-item">
                                         Parcelas
                                     </x-hyperlink-button>
                                 </li>
                             @endif
                             <li>
-                                <x-confirmation-form action="{{ route('vendas.destroy', $venda->id) }}" method="POST" message="Tem certeza que deseja excluir esta venda?" title="Excluir Venda">
+                                <x-confirmation-form action="{{ route('vendas.destroy', $venda->id) }}" method="POST"
+                                    message="Tem certeza que deseja excluir esta venda?" title="Excluir Venda">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="dropdown-item">Excluir</button>
@@ -150,5 +149,4 @@
     @include('dashboard.modals.edit-venda-modal')
     @include('dashboard.modals.store-update-cliente')
     @include('dashboard.modals.store-update-produtos')
-
 @endsection

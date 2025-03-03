@@ -37,10 +37,9 @@ Projeto desenvolvido por **Eduardo Trevezani** - Desenvolvedor com mais de 6 ano
 ### 1. Clonar repositório
 ```
 git clone https://github.com/Thovard/PDV-teste-DC-TECNOLOGIA.git
-2. Instalar dependências
-```
 
-### bash
+```
+### Instalar dependências
 ```
 composer install
 npm install

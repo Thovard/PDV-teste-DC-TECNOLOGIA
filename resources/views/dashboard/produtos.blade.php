@@ -6,7 +6,8 @@
     title="Lista de Produtos"
     registerButtonText="Novo Produto"
     :headers="['ID', 'Nome', 'Foto', 'Quantidade', 'Tipo', 'Preço', 'Ações']"
-    idRegistreModal='storModalProduto'>
+    idRegistreModal='storModalProduto'
+    enableSearch="true" enableExport="true" id="produtos">
 
     @foreach ($produtos as $produto)
     <tr>

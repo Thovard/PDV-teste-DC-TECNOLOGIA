@@ -30,21 +30,22 @@ class DashboardController extends Controller
 
 
         $statusVendas = [
-            'pago' => $statusVendas['pago'] ?? 0,
+            'pago' => $statusVendas['em_dia'] ?? 0,
             'pendente' => $statusVendas['pendente'] ?? 0,
         ];
 
 
         $clientesMaisCompraram = Venda::where('user_id', $userId)
-            ->select('cliente_id', DB::raw('COUNT(*) as total_compras'))
-            ->groupBy('cliente_id')
-            ->orderByDesc('total_compras')
-            ->with('cliente:id,nome')
-            ->get()
-            ->map(fn($cliente) => (object) [
-                'nome' => $cliente->cliente->nome ?? 'Desconhecido',
-                'total_compras' => $cliente->total_compras,
-            ]);
+        ->select('cliente_id', DB::raw('COUNT(*) as total_compras'))
+        ->groupBy('cliente_id')
+        ->orderByDesc('total_compras')
+        ->take(10)
+        ->with('cliente:id,nome')
+        ->get()
+        ->map(fn($cliente) => (object) [
+            'nome' => $cliente->cliente->nome ?? 'Desconhecido',
+            'total_compras' => $cliente->total_compras,
+        ]);
 
 
         $produtosMaisVendidos = [];
@@ -66,10 +67,14 @@ class DashboardController extends Controller
         }
 
 
-        $produtosMaisVendidos = collect($produtosMaisVendidos)->map(fn($quantidade, $nome) => (object) [
-            'nome' => $nome,
-            'quantidade' => $quantidade,
-        ])->values();
+        $produtosMaisVendidos = collect($produtosMaisVendidos)
+    ->map(fn($quantidade, $nome) => (object) [
+        'nome' => $nome,
+        'quantidade' => $quantidade,
+    ])
+    ->sortByDesc('quantidade')
+    ->take(10)
+    ->values();
 
         return view('dashboard.index', compact(
             'clientesCount',
@@ -89,18 +94,18 @@ class DashboardController extends Controller
     public function update(Request $request){
         $user = Auth::user();
 
-        
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 
-        
+
         $user->name = $request->name;
         $user->email = $request->email;
 
-        
+
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }

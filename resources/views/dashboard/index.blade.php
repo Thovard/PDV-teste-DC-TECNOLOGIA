@@ -42,7 +42,7 @@
         </div>
     </div>
 
-    <x-table title="Clientes que mais compraram" :headers="['Nome', 'Quantidade de Compras']">
+    <x-table title="Clientes que mais compraram" :headers="['Nome', 'Quantidade de Compras']" enableSearch="true" enableExport="true" id="clientesMaisCompra">
         @foreach ($clientesMaisCompraram as $cliente)
             <tr>
                 <td>{{ $cliente->nome }}</td>
@@ -51,7 +51,7 @@
         @endforeach
     </x-table>
 
-    <x-table title="Produtos mais vendidos" :headers="['Nome', 'Quantidade Vendida']">
+    <x-table title="Produtos mais vendidos" :headers="['Nome', 'Quantidade Vendida']" enableSearch="true" enableExport="true" id="produtosMaisVendidos">
         @foreach ($produtosMaisVendidos as $produto)
             <tr>
                 <td>{{ $produto->nome }}</td>

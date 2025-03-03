@@ -32,6 +32,15 @@
         text-align: center;
         white-space: nowrap;
     }
+
+    /* Garante o alinhamento das colunas */
+    #{{ $id }} th,
+    #{{ $id }} td {
+        width: {{ 100 / count($headers) }}%;
+        text-align: left;
+        vertical-align: middle;
+        padding: 8px;
+    }
 </style>
 
 <div class="card shadow border-0">
@@ -59,12 +68,13 @@
     </div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-hover table-striped" id="{{ $id }}">
+            <table class="table table-hover table-striped" id="{{ $id }}" style="table-layout: fixed;">
                 @if (count($headers) > 0)
                     <thead class="table-dark">
                         <tr>
                             @foreach ($headers as $header)
-                                <th>{{ $header }}</th>
+                                <th class="align-middle" style="text-align: left; vertical-align: middle;">
+                                    {{ $header }}</th>
                             @endforeach
                         </tr>
                     </thead>
@@ -84,33 +94,43 @@
 
 <script>
     $(document).ready(function() {
-        
-        const tableId = @json($id); 
-        let rows = $(`#${tableId} tbody tr`), 
-            perPage = 10;
+
+        const tableId = @json($id);
+        const rows = $(`#${tableId} tbody tr`);
+        const perPage = 10;
+
 
         function paginateTable(filteredRows = rows) {
             $(".pagination-container").empty();
             filteredRows.hide().slice(0, perPage).show();
-            let totalPages = Math.ceil(filteredRows.length / perPage);
+
+            const totalPages = Math.ceil(filteredRows.length / perPage);
             if (totalPages > 1) {
-                let pagination = $("<ul class='pagination pagination-sm'></ul>");
+                const pagination = $("<ul class='pagination pagination-sm'></ul>");
+
+
                 for (let i = 1; i <= totalPages; i++) {
                     $("<li class='page-item'><a href='#' class='page-link'>" + i + "</a></li>").appendTo(
                         pagination);
                 }
+
                 pagination.find("li:first").addClass("active");
                 pagination.appendTo(".pagination-container");
 
+
                 $(".pagination-container").on("click", ".page-link", function(e) {
                     e.preventDefault();
-                    let page = parseInt($(this).text());
-                    filteredRows.hide().slice((page - 1) * perPage, page * perPage).show();
+                    const page = parseInt($(this).text());
+                    filteredRows.hide().slice((page - 1) * perPage, page * perPage)
+                        .show();
                     $(".page-item").removeClass("active");
                     $(this).parent().addClass("active");
                 });
             }
         }
+
+
+        paginateTable();
 
         if ($("#searchInput").length) {
             $("#searchInput").on("input", function() {
@@ -123,7 +143,7 @@
             });
         }
 
-        
+
         if ($(`#exportPdf-${tableId}`).length) {
             $(`#exportPdf-${tableId}`).off("click").on("click", function() {
                 const {
@@ -135,15 +155,15 @@
                     format: 'a4'
                 });
 
-                
+
                 const docTitle = @json($title).trim().replace(/ /g, '_').toLowerCase();
                 const fileName = docTitle ? `${docTitle}.pdf` : 'relatorio.pdf';
 
-                
+
                 doc.setFontSize(16);
                 doc.text(@json($title) || 'Relatório de Dados', 14, 15);
 
-                
+
                 const originalHeaders = @json($headers);
                 const filteredHeaders = originalHeaders.filter(header => header !== 'Ações');
                 const validIndexes = originalHeaders.reduce((acc, header, index) => {
@@ -151,7 +171,7 @@
                     return acc;
                 }, []);
 
-                
+
                 const data = [];
                 $(`#${tableId} tbody tr`).each(function() {
                     const rowData = [];
@@ -163,7 +183,7 @@
                     data.push(rowData);
                 });
 
-                
+
                 doc.autoTable({
                     head: [filteredHeaders],
                     body: data,
@@ -178,13 +198,13 @@
                     tableWidth: 'auto',
                     theme: 'grid',
                     headerStyles: {
-                        fillColor: [52, 58, 64], 
+                        fillColor: [52, 58, 64],
                         fontSize: 12,
                         textColor: 255
                     }
                 });
 
-                
+
                 doc.save(fileName);
             });
         }

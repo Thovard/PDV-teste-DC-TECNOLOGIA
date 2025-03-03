@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
     {
         User::create([
             'name' => 'Administrador',
-            'email' => 'admin@lintechdigital.com',
+            'email' => 'admin@teste.com',
             'password' => Hash::make('123456'),
             'remember_token' => Str::random(10),
         ]);

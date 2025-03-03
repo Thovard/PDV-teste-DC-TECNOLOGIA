@@ -2,11 +2,8 @@
 
 @section('dashboard-content')
     <div class="m-4">
-        <x-table
-        title="Lista de Clientes"
-        registerButtonText="Novo Cliente"
-        :headers="['ID', 'Nome', 'Email', 'CPF', 'Telefone', 'Ações']"
-        idRegistreModal='storModalCliente'>
+        <x-table title="Lista de Clientes" registerButtonText="Novo Cliente" :headers="['ID', 'Nome', 'Email', 'CPF', 'Telefone', 'Ações']"
+            idRegistreModal='storModalCliente' enableSearch="true" enableExport="true" id="clientes">
 
             @foreach ($clientes as $cliente)
                 <tr>
