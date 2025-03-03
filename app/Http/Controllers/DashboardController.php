@@ -89,18 +89,18 @@ class DashboardController extends Controller
     public function update(Request $request){
         $user = Auth::user();
 
-        // Validação dos campos
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 
-        // Atualizar dados do usuário
+        
         $user->name = $request->name;
         $user->email = $request->email;
 
-        // Atualizar a senha apenas se for preenchida
+        
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }

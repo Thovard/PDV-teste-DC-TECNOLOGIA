@@ -1,10 +1,10 @@
 @props([
-    'href' => null,                // Link para redirecionamento (opcional)
-    'type' => 'button',            // 'button', 'submit', etc.
-    'variant' => 'primary',        // Bootstrap: primary, secondary, success, danger, warning, info, light, dark
-    'modalTarget' => null,         // ID da modal a ser aberta, se for um botão para abrir modal
+    'href' => null,                
+    'type' => 'button',            
+    'variant' => 'primary',        
+    'modalTarget' => null,         
     'class' => '',
-    'id' => null               // Classes CSS adicionais
+    'id' => null               
 ])
 
 <button

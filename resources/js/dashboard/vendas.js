@@ -21,16 +21,13 @@ $(document).ready(function () {
         });
     }
 
-    // ---------------------- Funções para Cadastro ---------------------- //
-
-    // Busca os dados padrão para cadastro/edição
     function fetchData() {
         return $.getJSON("/dashboard/vendas/get-default-data").fail(
             handleDataError
         );
     }
 
-    // Popula o select de clientes para cadastro
+
     function popularClientes(clientes) {
         const $clienteSelect = $("#cliente")
             .empty()
@@ -40,7 +37,7 @@ $(document).ready(function () {
         });
     }
 
-    // Popula o select de produtos para cadastro
+
     function popularProdutosNoCampo(prods) {
         const produtoSelect = $("#produto")
             .empty()
@@ -52,7 +49,7 @@ $(document).ready(function () {
         });
     }
 
-    // Popula o select de pagamentos e parcelas para cadastro
+
     function popularPagamentos(configs) {
         paymentConfigs = configs;
         const $pagamentoSelect = $("#pagamento")
@@ -75,7 +72,7 @@ $(document).ready(function () {
         }
     }
 
-    // Validação de estoque para cadastro
+
     function validarEstoque() {
         let valido = true;
         $(".produto-item").each(function () {
@@ -131,7 +128,7 @@ $(document).ready(function () {
         return valido;
     }
 
-    // Cálculo dos valores dos produtos, taxa e total para cadastro
+
     function calcularValores() {
         if (!validarEstoque()) {
             $("#valorProduto, #taxa, #valorTotal").val("R$ 0,00");
@@ -174,7 +171,7 @@ $(document).ready(function () {
         $("#valorTotal").val(formatter.format(totalGeral));
     }
 
-    // Atualiza os selects de produtos para cadastro (evita duplicatas)
+
     function updateProdutoSelectOptions() {
         let selectedIds = [];
         $(".produto-select").each(function () {
@@ -201,7 +198,7 @@ $(document).ready(function () {
         });
     }
 
-    // Adiciona um novo produto para cadastro
+
     function adicionarNovoProduto() {
         const index = $(".produto-item").length + 1;
         const novoProduto = $(`
@@ -248,7 +245,7 @@ $(document).ready(function () {
         });
     }
 
-    // Envia o formulário de cadastro
+
     function enviarVenda() {
         $("#formVenda").on("submit", function (e) {
             e.preventDefault();
@@ -317,9 +314,9 @@ $(document).ready(function () {
         });
     }
 
-    // ---------------------- Funções para Edição ---------------------- //
 
-    // Popula o select de clientes para edição
+
+
     function popularClientesEdit(clientes) {
         const $clienteSelect = $("#clienteEdit")
             .empty()
@@ -329,7 +326,7 @@ $(document).ready(function () {
         });
     }
 
-    // Popula o select de produtos para edição
+
     function popularProdutosEditNoCampo(prods) {
         const produtoSelect = $("#produtoEdit")
             .empty()
@@ -341,7 +338,7 @@ $(document).ready(function () {
         });
     }
 
-    // Popula o select de pagamentos e parcelas para edição
+
     function popularPagamentosEdit(configs) {
         paymentConfigs = configs;
         const $pagamentoSelect = $("#pagamentoEdit")
@@ -364,11 +361,11 @@ $(document).ready(function () {
         }
     }
 
-    // Validação de estoque para edição
+
     function validarEstoqueEdit() {
         let valido = true;
         $("#produtosContainerEdit .produto-item").each(function () {
-            // Aqui, usamos os selects e inputs de edição
+
             const $produto = $(this).find(".produto-select option:selected");
             const quantidadeStr = $(this).find(".quantidade-produto").val();
             if (
@@ -379,7 +376,7 @@ $(document).ready(function () {
             }
             const quantidade = parseInt(quantidadeStr) || 0;
             const estoque = parseInt($produto.data("quantidade")) || 0;
-            // Aqui, se preferir, pode usar uma classe específica para o feedback na edição
+
             const $feedback = $(this).find(".estoque-feedback");
             if (!$produto.val()) {
                 $feedback
@@ -425,7 +422,7 @@ $(document).ready(function () {
         return valido;
     }
 
-    // Cálculo dos valores para edição
+
     function calcularValoresEdit() {
         if (!validarEstoqueEdit()) {
             $("#valorProdutoEdit, #taxaEdit, #valorTotalEdit").val("R$ 0,00");
@@ -468,7 +465,7 @@ $(document).ready(function () {
         $("#valorTotalEdit").val(formatter.format(totalGeral));
     }
 
-    // Atualiza os selects de produtos para edição (evita duplicatas)
+
     function updateProdutoSelectOptionsEdit() {
         let selectedIds = [];
         $("#produtosContainerEdit .produto-select").each(function () {
@@ -495,7 +492,7 @@ $(document).ready(function () {
         });
     }
 
-    // Adiciona um novo produto para edição
+
     function adicionarNovoProdutoEdit() {
         const index = $("#produtosContainerEdit .produto-item").length + 1;
         const novoProduto = $(`
@@ -542,7 +539,7 @@ $(document).ready(function () {
         });
     }
 
-    // Envio do formulário de edição
+
     function enviarVendaEdit() {
         $("#formEditVenda").on("submit", function (e) {
             e.preventDefault();
@@ -611,39 +608,39 @@ $(document).ready(function () {
         });
     }
 
-    // ---------------------- Outras Configurações e Eventos ---------------------- //
 
-    // Evento para abrir a modal de edição e carregar os dados da venda
+
+
     $("#edit").on("click", async function () {
         const id = $(this).attr("dataid");
         try {
-            // Busca os dados da venda
+
             const venda = await $.getJSON("/dashboard/vendas/get-venda/" + id);
             console.log(venda);
             vendaEditId = venda.venda.id;
-            // Busca os dados padrão (produtos, clientes, configs)
+
             const defaultData = await fetchData();
             produtosData = defaultData.produtos;
             popularPagamentosEdit(defaultData.paymentConfigs);
             popularParcelasEdit();
-            // Carrega os dados na modal de edição
+
             loadVendaForEdit(venda, defaultData);
-            // Configura o envio da edição (caso ainda não esteja configurado)
+
             enviarVendaEdit();
         } catch (error) {
             handleDataError(error);
         }
     });
 
-    // Carrega os dados da venda na modal de edição
+
     function loadVendaForEdit(venda, defaultData) {
-        // Preenche o select de cliente na edição
+
         popularClientesEdit(defaultData.clientes);
         if (venda.venda.cliente) {
             $("#clienteEdit").val(venda.venda.cliente.id);
         }
 
-        // Preenche os selects de pagamento e parcelas na edição
+
         $("#pagamentoEdit").val(venda.venda.forma_pagamento.slug);
         if (venda.venda.forma_pagamento.slug === "credit-card") {
             $("#parcelasEdit").prop("disabled", false).val(venda.venda.quantidade_parcelas);
@@ -688,7 +685,7 @@ $(document).ready(function () {
             `);
             $("#produtosContainerEdit").append(novoProduto);
 
-            // Popula o select com o produto atual e as demais opções
+
             const $select = novoProduto.find("select.produto-select");
             $select.append(
                 `<option value="${item.produto.id}" data-preco="${item.produto.preco}" data-quantidade="${item.produto.quantidade}" selected>${item.produto.nome}</option>`
@@ -701,10 +698,10 @@ $(document).ready(function () {
                 }
             });
 
-            // Define a quantidade
+
             novoProduto.find("input.quantidade-produto").val(item.quantidade);
 
-            // Eventos para atualização
+
             $select.on("change", function () {
                 updateProdutoSelectOptionsEdit();
                 calcularValoresEdit();
@@ -721,7 +718,7 @@ $(document).ready(function () {
                 calcularValoresEdit();
             });
         });
-        // Recalcula os valores com os dados já carregados
+
         calcularValoresEdit();
     }
 
@@ -744,7 +741,7 @@ $(document).ready(function () {
         }
     });
 
-    // Preencher parcelas ao abrir o modal de edição
+
     $(".modal").on("show.bs.modal", function () {
         let modal = $(this);
         let pagamentoSelecionado = modal
@@ -767,11 +764,11 @@ $(document).ready(function () {
         }
     });
 
-    // ---------------------- Configuração Inicial ---------------------- //
+
 
     async function init() {
         aplicarMascaras();
-        // Configura os elementos do formulário de cadastro
+
         $("#produtosContainer").addClass("container");
         $(".row.mb-3.d-flex").has("#produto").addClass("produto-item");
         $("#produto").attr("name", "produto[]").addClass("produto-select");
@@ -791,7 +788,7 @@ $(document).ready(function () {
             popularPagamentos(data.paymentConfigs);
             popularParcelas();
             enviarVenda();
-            // Outros listeners para cadastro
+
             $("#btnAdicionarProduto").on("click", function () {
                 adicionarNovoProduto();
             });

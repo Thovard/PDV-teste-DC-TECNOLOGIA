@@ -33,7 +33,7 @@ class ProdutosController extends Controller
             'preco.required'      => 'O campo preço é obrigatório.',
         ]);
 
-        // Converte o valor do preço
+       
         $price = $validated['preco'];
         $price = preg_replace('/[^0-9,]/', '', $price);
         $price = str_replace(',', '.', $price);

@@ -20,12 +20,12 @@ class VendaSeeder extends Seeder
 
         foreach ($clientes as $cliente) {
             $user = $users->random();
-            $formaPagamentoId = rand(1, 3); // Simulando formas de pagamento existentes
-            $quantidadeParcelas = $formaPagamentoId == 2 ? rand(1, 6) : 1; // Parcelas só se formaPagamentoId for 2
+            $formaPagamentoId = rand(1, 3); 
+            $quantidadeParcelas = $formaPagamentoId == 2 ? rand(1, 6) : 1; 
             $statusOptions = ['pendente', 'aprovado', 'em_dia', 'recusado', 'cancelada', 'atrasado'];
             $status = $statusOptions[array_rand($statusOptions)];
 
-            // Gerar produtos para a venda
+            
             $produtosVenda = [];
             $totalVenda = 0;
             $valorProduto = 0;
@@ -43,7 +43,7 @@ class VendaSeeder extends Seeder
 
                 $totalVenda += $subtotal;
                 $valorProduto = $subtotal;
-                $valorTaxa = $subtotal * 0.05; // Simulação de taxa de 5%
+                $valorTaxa = $subtotal * 0.05; 
             }
 
             Venda::create([
@@ -57,7 +57,7 @@ class VendaSeeder extends Seeder
                 'total' => $totalVenda + $valorTaxa,
                 'status' => $status,
                 'data_primeira_parcela' => Carbon::now()->addDays(rand(1, 30)),
-                'data_demais_parcelas' => $formaPagamentoId == 2 ? Carbon::now()->addDays(rand(30, 180)) : null, // Só gera data demais parcelas se formaPagamentoId for 2
+                'data_demais_parcelas' => $formaPagamentoId == 2 ? Carbon::now()->addDays(rand(30, 180)) : null, 
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

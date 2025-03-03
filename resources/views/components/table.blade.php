@@ -84,9 +84,9 @@
 
 <script>
     $(document).ready(function() {
-        // Define o ID da tabela dinamicamente
-        const tableId = @json($id); // Pega o ID da tabela passado via props
-        let rows = $(`#${tableId} tbody tr`), // Usa o ID dinâmico
+        
+        const tableId = @json($id); 
+        let rows = $(`#${tableId} tbody tr`), 
             perPage = 10;
 
         function paginateTable(filteredRows = rows) {
@@ -123,7 +123,7 @@
             });
         }
 
-        // Verifica se o botão de exportação existe
+        
         if ($(`#exportPdf-${tableId}`).length) {
             $(`#exportPdf-${tableId}`).off("click").on("click", function() {
                 const {
@@ -135,15 +135,15 @@
                     format: 'a4'
                 });
 
-                // Usa o título do card como nome do arquivo
+                
                 const docTitle = @json($title).trim().replace(/ /g, '_').toLowerCase();
                 const fileName = docTitle ? `${docTitle}.pdf` : 'relatorio.pdf';
 
-                // Configuração do título
+                
                 doc.setFontSize(16);
                 doc.text(@json($title) || 'Relatório de Dados', 14, 15);
 
-                // Captura headers e índices
+                
                 const originalHeaders = @json($headers);
                 const filteredHeaders = originalHeaders.filter(header => header !== 'Ações');
                 const validIndexes = originalHeaders.reduce((acc, header, index) => {
@@ -151,7 +151,7 @@
                     return acc;
                 }, []);
 
-                // Coleta dados de TODAS as linhas da tabela (ignorando paginação e filtros)
+                
                 const data = [];
                 $(`#${tableId} tbody tr`).each(function() {
                     const rowData = [];
@@ -163,7 +163,7 @@
                     data.push(rowData);
                 });
 
-                // Gera tabela no PDF
+                
                 doc.autoTable({
                     head: [filteredHeaders],
                     body: data,
@@ -178,13 +178,13 @@
                     tableWidth: 'auto',
                     theme: 'grid',
                     headerStyles: {
-                        fillColor: [52, 58, 64], // Cor do cabeçalho (#343a40)
+                        fillColor: [52, 58, 64], 
                         fontSize: 12,
                         textColor: 255
                     }
                 });
 
-                // Salva o PDF
+                
                 doc.save(fileName);
             });
         }

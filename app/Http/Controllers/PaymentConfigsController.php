@@ -41,7 +41,7 @@ class PaymentConfigsController extends Controller
                     ->withInput();
             }
         }
-        // Verifica se os valores são maiores que 100
+       
         if ($validated['cash_rate'] > 100) {
             return redirect()->back()
                 ->withErrors(['cash_rate' => 'O campo Taxa à Vista não pode ser maior que 100.'])

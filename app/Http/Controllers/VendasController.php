@@ -111,7 +111,7 @@ class VendasController extends Controller
                 $produto->save();
             }
 
-            // Converter os valores recebidos em centavos para decimal, considerando as 2 últimas casas
+            
             $valorProdutoDecimal = number_format(floatval($validated['valorProduto']) / 100, 2, '.', '');
             $taxaDecimal = number_format(floatval($validated['taxa']) / 100, 2, '.', '');
             $valorTotalDecimal = number_format(floatval($validated['valorTotal']) / 100, 2, '.', '');
@@ -168,7 +168,7 @@ class VendasController extends Controller
 
     public function edit(Venda $venda)
     {
-        // Função para exibir o formulário de edição da venda
+        
     }
 
     public function update(Request $request, Venda $venda)
@@ -197,7 +197,7 @@ class VendasController extends Controller
         try {
             DB::beginTransaction();
 
-            // Restaurar os produtos ao estoque antes de atualizar a venda
+            
             $produtosAntigos = json_decode($venda->produtos, true);
             if ($produtosAntigos) {
                 foreach ($produtosAntigos as $item) {
@@ -209,10 +209,10 @@ class VendasController extends Controller
                 }
             }
 
-            // Excluir parcelas antigas
+            
             $venda->parcelas()->delete();
 
-            // Atualizar estoque com os novos produtos
+            
             foreach ($validated['produtos'] as $item) {
                 $produto = produtos::find($item['produto']);
                 if ($produto->quantidade < $item['quantidade']) {
@@ -222,12 +222,12 @@ class VendasController extends Controller
                 $produto->save();
             }
 
-            // Converter valores para decimal
+            
             $valorProdutoDecimal = number_format(floatval($validated['valorProduto']) / 100, 2, '.', '');
             $taxaDecimal = number_format(floatval($validated['taxa']) / 100, 2, '.', '');
             $valorTotalDecimal = number_format(floatval($validated['valorTotal']) / 100, 2, '.', '');
 
-            // Atualizar os dados da venda
+            
             $venda->update([
                 'cliente_id' => $validated['cliente'],
                 'produtos' => json_encode($validated['produtos']),
@@ -239,7 +239,7 @@ class VendasController extends Controller
                 'status' => 'pendente',
             ]);
 
-            // Criar novas parcelas se for cartão de crédito parcelado
+            
             if ($validated['pagamento'] === 'credit-card' && $validated['parcelas'] > 1) {
                 $this->criarParcelas($venda, $validated, $valorTotalDecimal);
             }
