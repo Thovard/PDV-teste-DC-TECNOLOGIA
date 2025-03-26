@@ -1,6 +1,5 @@
 import applyMask from "../masks.js";
 import $ from "jquery";
-import "bootstrap";
 
 $(document).ready(function () {
     let paymentConfigs = {};
@@ -868,22 +867,26 @@ $(document).ready(function () {
             text: "Parcelas atualizadas com sucesso!",
             icon: "success",
             confirmButtonText: "OK",
-        }).then((result) => {
-            var modalElement = document.getElementById("editParcelasModal");
-            var modal = bootstrap.Modal.getInstance(modalElement);
-
-            if (modal) {
-                modal.hide();
-                modal.dispose(); // Remove completamente a instância do modal
+        }).then(() => {
+            // Remove a modal do DOM
+            const modalElement = document.getElementById('editParcelasModal');
+            if (modalElement) {
+                modalElement.style.display = 'none';
             }
 
-            // Aguarda um curto tempo para remover o backdrop e evitar bugs visuais
-            setTimeout(() => {
-                document
-                    .querySelectorAll(".modal-backdrop")
-                    .forEach((el) => el.remove());
-                document.body.classList.remove("modal-open"); // Remove a classe que bloqueia o scroll
-            }, 300);
+            // Remove o backdrop
+            const backdrops = document.getElementsByClassName('modal-backdrop');
+            while (backdrops.length > 0) {
+                backdrops[0].parentNode.removeChild(backdrops[0]);
+            }
+
+            // Restaura o scroll do body
+            document.body.classList.remove('modal-open');
+            document.body.style.paddingRight = ''; // Remove padding do body adicionado pelo Bootstrap
+
+            // Reseta o estado do body
+            document.body.style.overflow = 'auto';
+            document.body.style.paddingRight = '0px';
         });
     });
 
