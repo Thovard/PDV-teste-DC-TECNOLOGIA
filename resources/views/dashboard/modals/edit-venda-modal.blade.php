@@ -60,11 +60,23 @@
                         <option value="" hidden>Selecione a forma</option>
                     </select>
                 </div>
-                <div class="col-md-6">
-                    <label for="parcelasEdit" class="form-label">Parcelas</label>
-                    <select id="parcelasEdit" name="parcelasEdit" class="form-select" disabled>
-                        <option value="" hidden>Selecione as parcelas</option>
-                    </select>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="flex-grow-1">
+                        <label for="parcelasEdit" class="form-label">Parcelas</label>
+                        <select id="parcelasEdit" name="parcelasEdit" class="form-select" disabled>
+                            <option value="" hidden>Selecione as parcelas</option>
+                        </select>
+                    </div>
+                    <x-button
+                        id="ConfigParcelasEdit"
+                        type="button"
+                        variant="outline-secondary"
+                        modalTarget="editParcelasModal"
+                        class="ms-2 py-2"
+                        disabled
+                    >
+                        <i class="bi bi-pencil"></i>
+                    </x-button>
                 </div>
             </div>
 
