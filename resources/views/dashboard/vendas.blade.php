@@ -61,11 +61,17 @@
                             <option value="" hidden>Selecione a forma</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <label for="parcelas" class="form-label">Parcelas</label>
-                        <select id="parcelas" name="parcelas" class="form-select" disabled>
-                            <option value="" hidden>Selecione as parcelas</option>
-                        </select>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <div class="flex-grow-1">
+                            <label for="parcelas" class="form-label">Parcelas</label>
+                            <select id="parcelas" name="parcelas" class="form-select" disabled>
+                                <option value="" hidden>Selecione as parcelas</option>
+                            </select>
+                        </div>
+                        <x-button id="ConfigParcelas" type="button" variant="outline-secondary"
+                            modalTarget="editParcelasModal" class="ms-2 py-2" disabled>
+                            <i class="bi bi-pencil"></i>
+                        </x-button>
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -149,4 +155,5 @@
     @include('dashboard.modals.edit-venda-modal')
     @include('dashboard.modals.store-update-cliente')
     @include('dashboard.modals.store-update-produtos')
+    @include('dashboard.modals.config-parcelas-modal')
 @endsection

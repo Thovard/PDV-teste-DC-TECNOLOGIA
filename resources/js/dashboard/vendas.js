@@ -1,11 +1,15 @@
 import applyMask from "../masks.js";
 import $ from "jquery";
+import "bootstrap";
 
 $(document).ready(function () {
     let paymentConfigs = {};
     let produtosData = [];
     let vendaEditId;
+    let originalTotal = 0;
+    let parcelasData = {};
 
+    // MAIN FUNCTIONS
     function aplicarMascaras() {
         $("input[name='cpf']").each(function () {
             applyMask(this, "cpf");
@@ -27,7 +31,6 @@ $(document).ready(function () {
         );
     }
 
-
     function popularClientes(clientes) {
         const $clienteSelect = $("#cliente")
             .empty()
@@ -36,7 +39,6 @@ $(document).ready(function () {
             $clienteSelect.append(new Option(cliente.nome, cliente.id));
         });
     }
-
 
     function popularProdutosNoCampo(prods) {
         const produtoSelect = $("#produto")
@@ -49,7 +51,6 @@ $(document).ready(function () {
         });
     }
 
-
     function popularPagamentos(configs) {
         paymentConfigs = configs;
         const $pagamentoSelect = $("#pagamento")
@@ -59,6 +60,7 @@ $(document).ready(function () {
             $pagamentoSelect.append(new Option(config.name, config.slug));
         });
     }
+
     function popularParcelas() {
         const $parcelasSelect = $("#parcelas").empty();
         const creditConfig = paymentConfigs["credit-card"];
@@ -71,7 +73,6 @@ $(document).ready(function () {
             }
         }
     }
-
 
     function validarEstoque() {
         let valido = true;
@@ -92,7 +93,6 @@ $(document).ready(function () {
                 $feedback
                     .html("Selecione um produto")
                     .removeClass("text-success text-danger");
-                console.log("Produto não selecionado.");
                 valido = false;
                 return false;
             }
@@ -101,7 +101,6 @@ $(document).ready(function () {
                     .html("Quantidade inválida")
                     .addClass("text-danger")
                     .removeClass("text-success");
-                console.log("Quantidade inválida:", quantidade);
                 valido = false;
                 return false;
             }
@@ -112,7 +111,6 @@ $(document).ready(function () {
                     )
                     .addClass("text-danger")
                     .removeClass("text-success");
-                console.log("Estoque insuficiente:", quantidade, estoque);
                 valido = false;
                 return false;
             }
@@ -128,12 +126,12 @@ $(document).ready(function () {
         return valido;
     }
 
-
     function calcularValores() {
         if (!validarEstoque()) {
             $("#valorProduto, #taxa, #valorTotal").val("R$ 0,00");
             return;
         }
+
         let valorTotalProdutos = 0;
         $("#produtosContainer .produto-item").each(function () {
             const $produto = $(this).find(".produto-select option:selected");
@@ -147,9 +145,11 @@ $(document).ready(function () {
         let parcelas = parseInt($("#parcelas").val()) || 1;
         const config = paymentConfigs[metodo] || {};
         let taxaTotal = 0;
+
         if (metodo === "credit-card" && config.installment_limit) {
             parcelas = Math.min(parcelas, config.installment_limit);
         }
+
         if (metodo === "credit-card") {
             if (parcelas === 1 && config.cash_rate) {
                 taxaTotal = valorTotalProdutos * (config.cash_rate / 100);
@@ -160,17 +160,27 @@ $(document).ready(function () {
         } else if (config.cash_rate) {
             taxaTotal = valorTotalProdutos * (config.cash_rate / 100);
         }
-        const totalGeral = valorTotalProdutos + taxaTotal;
+
+        let totalGeral = valorTotalProdutos + taxaTotal;
+        if (
+            parcelasData &&
+            Object.keys(parcelasData).length > 0 &&
+            parcelasData.newTotal
+        ) {
+            console.log(parcelasData)
+            totalGeral = parcelasData.newTotal;
+        }
+
         const formatter = new Intl.NumberFormat("pt-BR", {
             style: "currency",
             currency: "BRL",
             minimumFractionDigits: 2,
         });
+
         $("#valorProduto").val(formatter.format(valorTotalProdutos));
         $("#taxa").val(formatter.format(taxaTotal));
         $("#valorTotal").val(formatter.format(totalGeral));
     }
-
 
     function updateProdutoSelectOptions() {
         let selectedIds = [];
@@ -197,7 +207,6 @@ $(document).ready(function () {
             $select.val(currentVal);
         });
     }
-
 
     function adicionarNovoProduto() {
         const index = $(".produto-item").length + 1;
@@ -245,7 +254,6 @@ $(document).ready(function () {
         });
     }
 
-
     function enviarVenda() {
         $("#formVenda").on("submit", function (e) {
             e.preventDefault();
@@ -266,6 +274,7 @@ $(document).ready(function () {
                 valorProduto: $("#valorProduto").val().replace(/\D/g, ""),
                 taxa: $("#taxa").val().replace(/\D/g, ""),
                 valorTotal: $("#valorTotal").val().replace(/\D/g, ""),
+                parcelasData: parcelasData,
             };
             $.ajax({
                 url: "/dashboard/vendas/store-venda",
@@ -314,9 +323,7 @@ $(document).ready(function () {
         });
     }
 
-
-
-
+    // EDIT MODE FUNCTIONS
     function popularClientesEdit(clientes) {
         const $clienteSelect = $("#clienteEdit")
             .empty()
@@ -325,7 +332,6 @@ $(document).ready(function () {
             $clienteSelect.append(new Option(cliente.nome, cliente.id));
         });
     }
-
 
     function popularProdutosEditNoCampo(prods) {
         const produtoSelect = $("#produtoEdit")
@@ -337,7 +343,6 @@ $(document).ready(function () {
             );
         });
     }
-
 
     function popularPagamentosEdit(configs) {
         paymentConfigs = configs;
@@ -361,11 +366,9 @@ $(document).ready(function () {
         }
     }
 
-
     function validarEstoqueEdit() {
         let valido = true;
         $("#produtosContainerEdit .produto-item").each(function () {
-
             const $produto = $(this).find(".produto-select option:selected");
             const quantidadeStr = $(this).find(".quantidade-produto").val();
             if (
@@ -382,7 +385,6 @@ $(document).ready(function () {
                 $feedback
                     .html("Selecione um produto")
                     .removeClass("text-success text-danger");
-                console.log("Produto não selecionado (edição).");
                 valido = false;
                 return false;
             }
@@ -391,7 +393,6 @@ $(document).ready(function () {
                     .html("Quantidade inválida")
                     .addClass("text-danger")
                     .removeClass("text-success");
-                console.log("Quantidade inválida (edição):", quantidade);
                 valido = false;
                 return false;
             }
@@ -402,11 +403,6 @@ $(document).ready(function () {
                     )
                     .addClass("text-danger")
                     .removeClass("text-success");
-                console.log(
-                    "Estoque insuficiente (edição):",
-                    quantidade,
-                    estoque
-                );
                 valido = false;
                 return false;
             }
@@ -421,7 +417,6 @@ $(document).ready(function () {
         });
         return valido;
     }
-
 
     function calcularValoresEdit() {
         if (!validarEstoqueEdit()) {
@@ -465,7 +460,6 @@ $(document).ready(function () {
         $("#valorTotalEdit").val(formatter.format(totalGeral));
     }
 
-
     function updateProdutoSelectOptionsEdit() {
         let selectedIds = [];
         $("#produtosContainerEdit .produto-select").each(function () {
@@ -491,7 +485,6 @@ $(document).ready(function () {
             $select.val(currentVal);
         });
     }
-
 
     function adicionarNovoProdutoEdit() {
         const index = $("#produtosContainerEdit .produto-item").length + 1;
@@ -538,7 +531,6 @@ $(document).ready(function () {
             calcularValoresEdit();
         });
     }
-
 
     function enviarVendaEdit() {
         $("#formEditVenda").on("submit", function (e) {
@@ -608,52 +600,27 @@ $(document).ready(function () {
         });
     }
 
-
-
-
-    $("#edit").on("click", async function () {
-        const id = $(this).attr("dataid");
-        try {
-
-            const venda = await $.getJSON("/dashboard/vendas/get-venda/" + id);
-            console.log(venda);
-            vendaEditId = venda.venda.id;
-
-            const defaultData = await fetchData();
-            produtosData = defaultData.produtos;
-            popularPagamentosEdit(defaultData.paymentConfigs);
-            popularParcelasEdit();
-
-            loadVendaForEdit(venda, defaultData);
-
-            enviarVendaEdit();
-        } catch (error) {
-            handleDataError(error);
-        }
-    });
-
-
     function loadVendaForEdit(venda, defaultData) {
-
         popularClientesEdit(defaultData.clientes);
         if (venda.venda.cliente) {
             $("#clienteEdit").val(venda.venda.cliente.id);
         }
 
-
         $("#pagamentoEdit").val(venda.venda.forma_pagamento.slug);
         if (venda.venda.forma_pagamento.slug === "credit-card") {
-            $("#parcelasEdit").prop("disabled", false).val(venda.venda.quantidade_parcelas);
+            $("#parcelasEdit")
+                .prop("disabled", false)
+                .val(venda.venda.quantidade_parcelas);
         } else {
             $("#parcelasEdit").prop("disabled", true).val("");
         }
-
-        console.log(venda.produtos);
         $("#produtosContainerEdit").empty();
         venda.produtos.forEach(function (item, index) {
             const idx = index + 1;
             const isFirst = index === 0;
-            const removeButton = isFirst ? "" : `<button type="button" class="btn btn-danger remover-produto">X</button>`;
+            const removeButton = isFirst
+                ? ""
+                : `<button type="button" class="btn btn-danger remover-produto">X</button>`;
 
             const novoProduto = $(`
                 <div class="row mb-3 d-flex produto-item">
@@ -685,7 +652,6 @@ $(document).ready(function () {
             `);
             $("#produtosContainerEdit").append(novoProduto);
 
-
             const $select = novoProduto.find("select.produto-select");
             $select.append(
                 `<option value="${item.produto.id}" data-preco="${item.produto.preco}" data-quantidade="${item.produto.quantidade}" selected>${item.produto.nome}</option>`
@@ -698,9 +664,7 @@ $(document).ready(function () {
                 }
             });
 
-
             novoProduto.find("input.quantidade-produto").val(item.quantidade);
-
 
             $select.on("change", function () {
                 updateProdutoSelectOptionsEdit();
@@ -721,12 +685,254 @@ $(document).ready(function () {
 
         calcularValoresEdit();
     }
+    //CONFIG DE PARCELAS.
+    const calcularTotais = (somaParcelas) => {
+        const variacao = somaParcelas - originalTotal;
+        const variacaoArredondada = Number(variacao.toFixed(2));
 
-    function handleDataError(jqXHR, textStatus, errorThrown) {
-        console.error("Erro ao carregar dados:", textStatus, errorThrown);
-        alert("Erro ao carregar dados para o formulário");
-    }
-    $('#pagamentoEdit').on("change", function () {
+        $("#variacaoTotal")
+            .html(
+                `<span class="variacao-icon"></span>${formatter.format(
+                    variacaoArredondada
+                )}`
+            )
+            .removeClass("text-success text-danger")
+            .addClass(variacaoArredondada > 0 ? "text-success" : "text-danger");
+
+        $("#novoTotal").text(
+            formatter.format(originalTotal + variacaoArredondada)
+        );
+    };
+
+    const formatarValorInput = (valor) => {
+        return (
+            parseFloat(
+                valor.replace("R$", "").replace(/\./g, "").replace(",", ".")
+            ) || 0
+        );
+    };
+
+    const gerarParcelasPadrao = (numParcelas, valorTotal) => {
+        console.log(numParcelas, valorTotal);
+        const $container = $("#parcelasContainer").empty();
+        const template = document.getElementById("parcelaTemplate");
+        const valorBase = valorTotal / numParcelas;
+        let valorAjustado = 0;
+
+        for (let i = 0; i < numParcelas; i++) {
+            const clone = document.importNode(template.content, true);
+            const $clone = $(clone);
+            const valor =
+                i === numParcelas - 1
+                    ? valorTotal - valorAjustado
+                    : Math.floor(valorBase * 100) / 100;
+
+            valorAjustado += valor;
+
+            $clone.find(".numero-parcela").text(i + 1);
+            $clone
+                .find(".valor-parcela")
+                .val(valor.toFixed(2).replace(".", ","));
+
+            const dataVencimento = new Date();
+            dataVencimento.setMonth(dataVencimento.getMonth() + (i + 1));
+            $clone
+                .find(".data-vencimento")
+                .val(dataVencimento.toISOString().split("T")[0]);
+
+            applyMask($clone.find(".valor-parcela")[0], "dinheiro");
+            $container.append($clone);
+        }
+        calcularTotais(valorTotal);
+    };
+
+    const carregarParcelasSalvas = () => {
+        if (!parcelasData.installments.length) return;
+
+        const $container = $("#parcelasContainer").empty();
+        const template = document.getElementById("parcelaTemplate");
+
+        parcelasData.installments.forEach((parcela) => {
+            const clone = document.importNode(template.content, true);
+            const $clone = $(clone);
+
+            $clone.find(".numero-parcela").text(parcela.numero);
+            $clone
+                .find(".valor-parcela")
+                .val(parcela.valor.toFixed(2).replace(".", ","));
+            $clone.find(".data-vencimento").val(parcela.vencimento);
+
+            applyMask($clone.find(".valor-parcela")[0], "dinheiro");
+            $container.append($clone);
+        });
+
+        originalTotal = parcelasData.totalOriginal;
+        $("#totalOriginal").text(formatter.format(originalTotal));
+        calcularTotais(parcelasData.newTotal);
+    };
+
+    // EVENT HANDLERS
+    $("#ConfigParcelas").on("click", () => {
+        const numParcelas = parseInt($("#parcelas").val()) || 1;
+        const valorTotal =
+            parseFloat($("#valorTotal").val().replace(/\D/g, "")) / 100;
+
+        originalTotal = valorTotal;
+        $("#totalOriginal").text(formatter.format(originalTotal));
+
+        if (
+            parcelasData &&
+            Object.keys(parcelasData).length > 0 &&
+            parcelasData.installments?.length > 0 &&
+            parcelasData.parcelas === numParcelas
+        ) {
+            console.log("aqui1");
+            carregarParcelasSalvas();
+        } else {
+            console.log("aqui2");
+            gerarParcelasPadrao(numParcelas, valorTotal);
+        }
+
+        // Garante que a modal seja recriada corretamente
+        var modalElement = document.getElementById("editParcelasModal");
+
+        // Remove qualquer instância anterior para evitar conflitos
+        var oldModal = bootstrap.Modal.getInstance(modalElement);
+        if (oldModal) {
+            oldModal.dispose();
+        }
+
+        var modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    });
+
+    $("#parcelasContainer").on("input", ".valor-parcela", function () {
+        applyMask(this, "dinheiro");
+
+        let somaParcelas = 0;
+        $(".valor-parcela").each(function () {
+            somaParcelas += formatarValorInput($(this).val());
+        });
+
+        calcularTotais(somaParcelas);
+    });
+
+    $("#salvarParcelas").on("click", async function () {
+        const parcelasConfig = [];
+        let error = false;
+
+        $(".parcela-item").each(function (index) {
+            const $this = $(this);
+            const valor = formatarValorInput(
+                $this.find(".valor-parcela").val()
+            );
+            const data = $this.find(".data-vencimento").val();
+
+            $this.find(".is-invalid").removeClass("is-invalid");
+
+            if (isNaN(valor) || valor <= 0) {
+                $this.find(".valor-parcela").addClass("is-invalid");
+                error = true;
+            }
+            if (!data) {
+                $this.find(".data-vencimento").addClass("is-invalid");
+                error = true;
+            }
+
+            parcelasConfig.push({
+                numero: index + 1,
+                valor: valor,
+                vencimento: data,
+            });
+        });
+
+        if (error)
+            return Swal.fire("Erro", "Verifique os campos destacados", "error");
+
+        const numParcelas = parseInt($("#parcelas").val()) || 1;
+        const totalParcelas = parcelasConfig.reduce(
+            (acc, parcela) => acc + parcela.valor,
+            0
+        );
+
+        parcelasData = {
+            parcelas: numParcelas,
+            installments: parcelasConfig,
+            totalOriginal: originalTotal,
+            variation: totalParcelas - originalTotal,
+            newTotal: totalParcelas,
+        };
+      await calcularValores();
+        Swal.fire({
+            title: "Sucesso!",
+            text: "Parcelas atualizadas com sucesso!",
+            icon: "success",
+            confirmButtonText: "OK",
+        }).then((result) => {
+            var modalElement = document.getElementById("editParcelasModal");
+            var modal = bootstrap.Modal.getInstance(modalElement);
+
+            if (modal) {
+                modal.hide();
+                modal.dispose(); // Remove completamente a instância do modal
+            }
+
+            // Aguarda um curto tempo para remover o backdrop e evitar bugs visuais
+            setTimeout(() => {
+                document
+                    .querySelectorAll(".modal-backdrop")
+                    .forEach((el) => el.remove());
+                document.body.classList.remove("modal-open"); // Remove a classe que bloqueia o scroll
+            }, 300);
+        });
+    });
+
+    $("#reiniciarParcelas").click(function () {
+        parcelasData = {
+            installments: [],
+            totalOriginal: 0,
+            variation: 0,
+            newTotal: 0,
+        };
+
+        const numParcelas = parseInt($("#parcelas").val()) || 1;
+        const valorTotal =
+            parseFloat($("#valorTotal").val().replace(/\D/g, "")) / 100;
+
+        originalTotal = valorTotal;
+        gerarParcelasPadrao(numParcelas, valorTotal);
+        $("#totalOriginal").text(formatter.format(originalTotal));
+    });
+
+    $("#parcelas").on("change", function () {
+        const numParcelas = parseInt($(this).val()) || 1;
+        const parcelas = parseInt($(this).val()) || 0;
+        $("#ConfigParcelas").prop("disabled", parcelas <= 1);
+        if (parcelasData && Object.keys(parcelasData).length > 0) {
+            parcelasData.parcelas = numParcelas;
+            parcelasData.total = calcularNovoTotal(parcelasData);
+        }
+        calcularValores();
+    });
+    $("#edit").on("click", async function () {
+        const id = $(this).attr("dataid");
+        try {
+            const venda = await $.getJSON("/dashboard/vendas/get-venda/" + id);
+            vendaEditId = venda.venda.id;
+
+            const defaultData = await fetchData();
+            produtosData = defaultData.produtos;
+            popularPagamentosEdit(defaultData.paymentConfigs);
+            popularParcelasEdit();
+
+            loadVendaForEdit(venda, defaultData);
+
+            enviarVendaEdit();
+        } catch (error) {
+            handleDataError(error);
+        }
+    });
+    $("#pagamentoEdit").on("change", function () {
         let pagamentoSelecionado = $(this)
             .find("option:selected")
             .text()
@@ -740,8 +946,6 @@ $(document).ready(function () {
             parcelasField.prop("disabled", true).val("");
         }
     });
-
-
     $(".modal").on("show.bs.modal", function () {
         let modal = $(this);
         let pagamentoSelecionado = modal
@@ -764,8 +968,17 @@ $(document).ready(function () {
         }
     });
 
+    // COMMON FUNCTIONS
+    function handleDataError(jqXHR, textStatus, errorThrown) {
+        console.error("Erro ao carregar dados:", textStatus, errorThrown);
+        alert("Erro ao carregar dados para o formulário");
+    }
+    const formatter = new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+    });
 
-
+    // INITIALIZATION
     async function init() {
         aplicarMascaras();
 
@@ -798,6 +1011,7 @@ $(document).ready(function () {
             $("#pagamento").on("change", function () {
                 const isCredit = $(this).val() === "credit-card";
                 $("#parcelas").prop("disabled", !isCredit);
+                $("#ConfigParcelas").prop("disabled", true);
                 if (!isCredit) {
                     $("#parcelas").val("");
                 } else {
@@ -818,6 +1032,5 @@ $(document).ready(function () {
             handleDataError(error);
         }
     }
-
     init();
 });

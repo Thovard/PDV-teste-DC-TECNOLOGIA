@@ -9,7 +9,8 @@ class ClientesController extends Controller
 {
     public function index(Cliente $cliente)
     {
-        $clientes = Cliente::where('user_id', auth()->id())->paginate(10);
+        $clientes = Cliente::where('user_id', auth()->id())
+            ->get();
         return view('dashboard.cliente_create', compact('clientes'));
     }
     public function store(Request $request)
@@ -39,7 +40,6 @@ class ClientesController extends Controller
         $cliente = Cliente::create($validated);
 
         return redirect()->back()->with('success', 'Cliente criado com sucesso!');
-
     }
 
     public function edit(Cliente $cliente)

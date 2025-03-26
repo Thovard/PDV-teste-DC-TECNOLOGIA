@@ -19,7 +19,7 @@ class VendasController extends Controller
     {
         $vendas = Venda::where('user_id', auth()->id())
             ->with(['cliente', 'formaPagamento', 'parcelas'])
-            ->orderByDesc('created_at')
+            ->orderByDesc('id')
             ->get();
         $produtos = produtos::where('user_id', auth()->id())->get();
         $vendas->transform(function ($venda) {
@@ -68,30 +68,21 @@ class VendasController extends Controller
             'pagamento' => 'required|in:pix,credit-card,debit-card,cash',
             'parcelas' => [
                 'nullable',
-                Rule::requiredIf(function () use ($request) {
-                    return $request->pagamento === 'credit-card';
-                }),
+                Rule::requiredIf($request->pagamento === 'credit-card'),
                 'integer',
                 'min:1',
             ],
             'valorProduto' => 'required|numeric|min:0.01',
             'taxa' => 'required|numeric|min:0',
-            'valorTotal' => 'required|numeric|min:0.01'
+            'valorTotal' => 'required|numeric|min:0.01',
+            'parcelasData' => 'nullable|array',
+            'parcelasData.installments' => 'nullable|array',
+            'parcelasData.installments.*.numero' => 'required|integer|min:1',
+            'parcelasData.installments.*.valor' => 'required|numeric|min:0.01',
+            'parcelasData.installments.*.vencimento' => 'required|date_format:Y-m-d'
         ];
 
-        $validated = $request->validate($regrasValidacao, [
-            'cliente.exists' => 'Cliente selecionado não existe',
-            'produtos.required' => 'É necessário selecionar ao menos um produto',
-            'produtos.*.produto.exists' => 'Produto selecionado não existe',
-            'produtos.*.quantidade.min' => 'A quantidade mínima deve ser 1 unidade',
-            'pagamento.required' => 'Forma de pagamento é obrigatória',
-            'parcelas.required_if' => 'Número de parcelas é obrigatório para cartão de crédito',
-            'parcelas.min' => 'O número mínimo de parcelas é 1',
-            'parcelas.max' => 'O número máximo de parcelas é 12',
-            'valorProduto.min' => 'O valor do produto deve ser maior que zero',
-            'taxa.min' => 'O valor da taxa não pode ser negativo',
-            'valorTotal.min' => 'O valor total deve ser maior que zero'
-        ]);
+        $validated = $request->validate($regrasValidacao, $mensagensPersonalizadas);
 
         try {
             DB::beginTransaction();
@@ -111,10 +102,16 @@ class VendasController extends Controller
                 $produto->save();
             }
 
-            
-            $valorProdutoDecimal = number_format(floatval($validated['valorProduto']) / 100, 2, '.', '');
-            $taxaDecimal = number_format(floatval($validated['taxa']) / 100, 2, '.', '');
-            $valorTotalDecimal = number_format(floatval($validated['valorTotal']) / 100, 2, '.', '');
+            // Ajustando os valores corretamente
+            $valorProdutoDecimal = floatval($validated['valorProduto']) / 100;
+            $taxaDecimal = floatval($validated['taxa']) / 100;
+            $valorTotalDecimal = floatval($validated['valorTotal']) / 100;
+            // Ajustando a forma de acessar as parcelas
+            $installments = $validated['parcelasData']['installments'] ?? [];
+
+            // Pegando a data da primeira parcela, se houver
+            $dataPrimeiraParcela = !empty($installments) ? $installments[0]['vencimento'] : now()->addDays(30)->format('Y-m-d');
+            $dataDemaisParcelas = count($installments) > 1 ? $installments[1]['vencimento'] : now()->addDays(60)->format('Y-m-d');
 
             $dadosVenda = [
                 'user_id' => Auth::id(),
@@ -126,14 +123,21 @@ class VendasController extends Controller
                 'valor_taxa' => $taxaDecimal,
                 'total' => $valorTotalDecimal,
                 'status' => 'pendente',
-                'data_primeira_parcela' => now()->addDays(30),
-                'data_demais_parcelas' => now()->addDays(60)
+                'data_primeira_parcela' => $dataPrimeiraParcela,
+                'data_demais_parcelas' => $dataDemaisParcelas
             ];
-
             $venda = Venda::create($dadosVenda);
 
-            if ($validated['pagamento'] === 'credit-card' && $validated['parcelas'] > 1) {
-                $this->criarParcelas($venda, $validated, $valorTotalDecimal);
+            if ($validated['pagamento'] === 'credit-card' && !empty($installments)) {
+                foreach ($installments as $parcela) {
+                    Parcela::create([
+                        'venda_id' => $venda->id,
+                        'numero' => $parcela['numero'],
+                        'valor' => round(floatval($parcela['valor']), 2),
+                        'data_vencimento' => $parcela['vencimento'],
+                        'status' => 'pendente'
+                    ]);
+                }
             }
 
             DB::commit();
@@ -142,7 +146,9 @@ class VendasController extends Controller
                 'success' => true,
                 'message' => 'Venda registrada com sucesso!',
                 'venda_id' => $venda->id,
-                'parcelas' => $venda->parcelas->count()
+                'parcelas' => count($installments),
+                'data_primeira_parcela' => $dataPrimeiraParcela,
+                'data_demais_parcelas' => $dataDemaisParcelas
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
@@ -159,17 +165,14 @@ class VendasController extends Controller
             DB::rollBack();
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao processar a venda: ' . $this->traduzirErro($e->getMessage()),
+                'message' => 'Erro ao processar a venda: ' . $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
 
-    public function edit(Venda $venda)
-    {
-        
-    }
+    public function edit(Venda $venda) {}
 
     public function update(Request $request, Venda $venda)
     {
@@ -197,7 +200,7 @@ class VendasController extends Controller
         try {
             DB::beginTransaction();
 
-            
+
             $produtosAntigos = json_decode($venda->produtos, true);
             if ($produtosAntigos) {
                 foreach ($produtosAntigos as $item) {
@@ -209,10 +212,10 @@ class VendasController extends Controller
                 }
             }
 
-            
+
             $venda->parcelas()->delete();
 
-            
+
             foreach ($validated['produtos'] as $item) {
                 $produto = produtos::find($item['produto']);
                 if ($produto->quantidade < $item['quantidade']) {
@@ -222,12 +225,12 @@ class VendasController extends Controller
                 $produto->save();
             }
 
-            
+
             $valorProdutoDecimal = number_format(floatval($validated['valorProduto']) / 100, 2, '.', '');
             $taxaDecimal = number_format(floatval($validated['taxa']) / 100, 2, '.', '');
             $valorTotalDecimal = number_format(floatval($validated['valorTotal']) / 100, 2, '.', '');
 
-            
+
             $venda->update([
                 'cliente_id' => $validated['cliente'],
                 'produtos' => json_encode($validated['produtos']),
@@ -239,7 +242,7 @@ class VendasController extends Controller
                 'status' => 'pendente',
             ]);
 
-            
+
             if ($validated['pagamento'] === 'credit-card' && $validated['parcelas'] > 1) {
                 $this->criarParcelas($venda, $validated, $valorTotalDecimal);
             }

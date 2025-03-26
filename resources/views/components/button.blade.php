@@ -1,10 +1,11 @@
 @props([
-    'href' => null,                
-    'type' => 'button',            
-    'variant' => 'primary',        
-    'modalTarget' => null,         
+    'href' => null,
+    'type' => 'button',
+    'variant' => 'primary',
+    'modalTarget' => null,
     'class' => '',
-    'id' => null               
+    'id' => null,
+    'disabled' => false,
 ])
 
 <button
@@ -12,6 +13,7 @@
     type="{{ $type }}"
     id="{{ $id }}"
     class="btn btn-{{ $variant }} {{ $class }}"
+    @if ($disabled) disabled @endif
     @if($modalTarget) data-bs-toggle="modal" data-bs-target="#{{ $modalTarget }}" @endif
 >
     {{ $slot }}
